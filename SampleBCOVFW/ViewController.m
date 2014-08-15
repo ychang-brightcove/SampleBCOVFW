@@ -1,6 +1,5 @@
 #import <AdManager/FWSDK.h>
 #import "BCOVFW.h"
-#import "RACEXTScope.h"
 
 
 #import "ViewController.h"
@@ -120,11 +119,11 @@ static NSString * const kViewControllerSlotId= @"300x250";
 
 - (BCOVFWSessionProviderAdContextPolicy)adContextPolicy
 {
-    @weakify(self);
+    ViewController * __weak weakSelf = self;
     
     return [^ id<FWContext>(BCOVVideo *video, BCOVSource *source, NSTimeInterval videoDuration) {
         
-        @strongify(self);
+        ViewController *strongSelf = weakSelf;
 
         // This block will get called before every session is delivered. The source,
         // video, and videoDuration are provided in case you need to use them to
@@ -133,7 +132,7 @@ static NSString * const kViewControllerSlotId= @"300x250";
         // appropriately. For information on what values need to be provided,
         // please refer to your Freewheel documentation or contact your Freewheel
         // account executive. Basic information is provided below.
-        id<FWContext> adContext = [self.adManager newContext];
+        id<FWContext> adContext = [strongSelf.adManager newContext];
 
         // These are player/app specific values.
         [adContext setPlayerProfile:@"90750:3pqa_ios" defaultTemporalSlotProfile:nil defaultVideoPlayerSlotProfile:nil defaultSiteSectionSlotProfile:nil];
@@ -143,7 +142,7 @@ static NSString * const kViewControllerSlotId= @"300x250";
         [adContext setVideoAssetId:@"brightcove_demo_video" idType:FW_ID_TYPE_CUSTOM duration:videoDuration durationType:FW_VIDEO_ASSET_DURATION_TYPE_EXACT location:nil autoPlayType:true videoPlayRandom:0 networkId:0 fallbackId:0];
 
         // This is the view where the ads will be rendered.
-        [adContext setVideoDisplayBase:self.videoContainerView];
+        [adContext setVideoDisplayBase:strongSelf.videoContainerView];
 
         // These are required to use Freewheel's OOTB ad controls.
         [adContext setParameter:FW_PARAMETER_USE_CONTROL_PANEL withValue:@"YES" forLevel:FW_PARAMETER_LEVEL_GLOBAL];
@@ -155,7 +154,7 @@ static NSString * const kViewControllerSlotId= @"300x250";
 
         // We save the adContext to the class so that we can access outside the
         // block. In this case, we will need to retrieve the companion ad slot.
-        self.adContext = adContext;
+        strongSelf.adContext = adContext;
         
         return adContext;
         
@@ -167,11 +166,8 @@ static NSString * const kViewControllerSlotId= @"300x250";
     // In order to play back content, we are going to request a playlist from the
     // catalog service. The Widevine component offers methods for retrieving Widevine
     // Content.
-    @weakify(self);
     [self.catalogService findPlaylistWithPlaylistID:kViewControllerPlaylistID parameters:nil completion:^(BCOVPlaylist *playlist, NSDictionary *jsonResponse, NSError *error) {
-        
-        @strongify(self);
-        
+
         if (playlist)
         {
             [self.playbackController setVideos:playlist];
